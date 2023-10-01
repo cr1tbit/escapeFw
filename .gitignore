@@ -1,0 +1,4 @@
+.pio
+include/config.h
+.vscode
+secrets.h
