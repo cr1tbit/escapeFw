@@ -1,27 +1,50 @@
 #include <SPI.h>
 #include <MFRC522.h>
+#include <vector>
 
-#define RST_PIN         8          // Configurable, see typical pin layout above
-#define SS_PIN          19         // Configurable, see typical pin layout above
+#include "pinDefs.h"
 
-#define HAL_PIN 32
+MFRC522 mfrc522(PIN_CRDR_SS, PIN_CRDR_RST);  // Create MFRC522 instance
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+std::vector<int> inputs = {
+	PIN_INPUT_0, PIN_INPUT_1, PIN_INPUT_2, 
+	PIN_INPUT_3, PIN_INPUT_4, PIN_INPUT_5
+};
 
-void setup() {
-	Serial.begin(115200);		// Initialize serial communications with the PC
-	while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-	SPI.begin(20,21,22,-1);			// Init SPI bus
-	mfrc522.PCD_Init();		// Init MFRC522
-	delay(4);				// Optional delay. Some board do need more time after init to be ready, see Readme
-	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
-	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
-
-  pinMode(HAL_PIN, ANALOG);
+void initCardReader(){
+	SPI.begin(
+		PIN_CRDR_SCLK,
+		PIN_CRDR_MISO,
+		PIN_CRDR_MOSI,
+		-1
+	);
+	mfrc522.PCD_Init();
+	delay(4);
+	mfrc522.PCD_DumpVersionToSerial();	
 }
 
-void loop() {
-	// // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+void setup() {
+	Serial.setTxTimeoutMs(0); // prevent logger slowdown when no usb connected
+	Serial.begin(115200);
+
+	initCardReader();
+
+	for (auto i: inputs) {
+		pinMode(i, INPUT_PULLUP);		
+	}
+}
+
+bool areAllInputsHigh(std::vector<int> pins) {
+  	for (int i = 0; i < pins.size(); i++) {
+		if (digitalRead(pins[i]) == LOW) {
+		  return false;
+		}
+	}
+  return true;
+}
+
+bool isCardDetected(){
+	// Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
 	// if ( ! mfrc522.PICC_IsNewCardPresent()) {
 	// 	return;
 	// }
@@ -36,8 +59,19 @@ void loop() {
   // //print the UID
   // Serial.print("UID tag :");
   // Serial.println(mfrc522.uid.uidByte[0]);
+}
 
-  Serial.print("analog: ");
-  Serial.println(digitalRead(HAL_PIN));
-  delay(100);
+
+void loop() {
+	if (areAllInputsHigh(inputs)) {
+		Serial.println("HAL quest completed");
+		digitalWrite(PIN_LED_OUTPUT, HIGH);
+	}
+
+	if (isCardDetected()) {
+		Serial.println("NFC quest completed");
+		digitalWrite(PIN_LED_OUTPUT, HIGH);
+	}
+
+	delay(100);
 }
