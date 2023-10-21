@@ -12,8 +12,8 @@ MFRC522 mfrc522(PIN_CRDR_SS, PIN_CRDR_RST);  // Create MFRC522 instance
 
 Audio audio;
 WiFiMulti wifiMulti;
-String ssid =     "eduram";
-String password = "zarazcipodam";
+String ssid =     "???";
+String password = "???";
 
 std::vector<int> inputs = {
 	PIN_INPUT_0, PIN_INPUT_1, PIN_INPUT_2
@@ -45,7 +45,7 @@ void setup() {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     audio.setVolume(12); // 0...21
 
-	initCardReader();
+	// initCardReader();
 
 	for (auto i: inputs) {
 		pinMode(i, INPUT_PULLUP);		
@@ -58,7 +58,7 @@ bool areAllInputsHigh(std::vector<int> pins) {
 		  return false;
 		}
 	}
-  return true;
+  	return true;
 }
 
 bool isCardDetected(){

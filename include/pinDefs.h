@@ -7,9 +7,11 @@ const uint8_t PIN_INPUT_3 = 3;
 const uint8_t PIN_INPUT_4 = 4;
 const uint8_t PIN_INPUT_5 = 5;
 
-const uint8_t I2S_BCLK = 3;
-const uint8_t I2S_LRC  = 4;
-const uint8_t I2S_DOUT = 5;
+const uint8_t I2S_LRC  = 3;
+const uint8_t I2S_BCLK = 2;
+const uint8_t I2S_DOUT = 1;
+const uint8_t I2S_GAIN = 0;
+
 
 
 const uint8_t PIN_CRDR_RST = 6;
