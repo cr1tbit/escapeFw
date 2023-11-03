@@ -36,12 +36,11 @@ class CardReaderTrigger : public Trigger {
 		);
 		reader.PCD_Init();
 		delay(4);
-		reader.PCD_DumpVersionToSerial();
+		// reader.PCD_DumpVersionToSerial();
 	}
 
 	bool check() override {
 		if ( ! reader.PICC_IsNewCardPresent()) {
-			Serial.println(".");
 			return false;
 		}
 
@@ -50,18 +49,20 @@ class CardReaderTrigger : public Trigger {
 			return false;
 		}
 
-		reader.PICC_DumpToSerial(&(reader.uid));
+		// reader.PICC_DumpToSerial(&(reader.uid));
 		//print the UID
-		Serial.print("UID tag :");
 		printUid(reader.uid);
 		if (cards.find(reader.uid) == cards.end()) {
-			Serial.println("Adding new card");
-			cards.insert(std::pair<MFRC522::Uid, bool>(reader.uid, true));
+			Serial.println("Card not found");
+			// cards.insert(std::pair<MFRC522::Uid, bool>(reader.uid, true));
 		} else {
-			Serial.println("Card already exists");
+			cards[reader.uid]();
 		}
-		
 		return true;
+	}
+
+	void addCard(std::vector<uint8_t> uid, std::function<void(void)> callback) {
+		cards.insert(std::pair<MFRC522::Uid, std::function<void(void)>>(uidFromBytes(uid), callback));
 	}
 
 	struct UidComparator {
@@ -79,13 +80,29 @@ class CardReaderTrigger : public Trigger {
 	};
 
 	void printUid(MFRC522::Uid& uid) {
+		String out = "UID tag[" + String(uid.size) + "]: {";
 		for (int i = 0; i < uid.size; i++) {
-			Serial.print(uid.uidByte[i]);
+			out += uid.uidByte[i];
+			if (i < uid.size - 1){
+				out += ", ";
+			}
 		}
-		Serial.println();	
+		out += "}";
+		Serial.println(out);
 	}
 
-	std::map<MFRC522::Uid, bool, UidComparator> cards;
+	MFRC522::Uid uidFromBytes(std::vector<uint8_t> bytes) {
+		MFRC522::Uid uid;
+		uid.size = bytes.size();
+
+		for (int i = 0; i < bytes.size(); i++) {
+			uid.uidByte[i] = bytes[i];
+		}
+		printUid(uid);
+		return uid;
+	}
+
+	std::map<MFRC522::Uid, std::function<void(void)>, UidComparator> cards;
 	CardReaderPins_t _pins;
 };
 
