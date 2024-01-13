@@ -42,6 +42,7 @@ void setup()
 {
   Serial.setTxTimeoutMs(0);
   Serial.begin(115200);
+  delay(1000);
 
   SPIFFS.begin();
 
@@ -57,18 +58,22 @@ void setup()
     I2S_SPEAKER_LEFT_RIGHT_CLOCK,
     I2S_SPEAKER_SERIAL_DATA
   );
-  out -> SetGain(0.05);
-  out -> SetOutputModeMono(true);
+  out -> SetGain(0.2);
+  // out -> SetOutputModeMono(true);
+  // out -> SetBitsPerSample(16);
 
   mp3 = new AudioGeneratorMP3();
 }
 
 void loop()
 {
-  mp3->begin(file, out);
+  if (!(mp3->begin(file, out))) {
+    delay(2000);
+  }
 
   while (mp3->isRunning()) {
     if (!mp3->loop()) {
+      delay(1000);
       break;
     }
   }
