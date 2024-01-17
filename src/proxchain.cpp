@@ -13,17 +13,27 @@
 
 WiFiMulti wifiMulti;
 
-// std::vector<int> inputs = {
-// 	PIN_INPUT_0, PIN_INPUT_1, PIN_INPUT_2
-// };
-
-CardReaderPins_t pins = {
-	.ss   = PIN_CRDR_SS,
-	.sclk = PIN_CRDR_SCLK,
-	.mosi = PIN_CRDR_MOSI,
-	.miso = PIN_CRDR_MISO,
-	.rst  = PIN_CRDR_RST,
+/* * * Peripherals: * * */
+// 1x HAL sensor
+const std::vector<int> inputs = {
+	PIN_INPUT_0
 };
+
+// 1x relay gpio switch
+const int PIN_RELAY = 4;
+ 
+/* * * * * * * * Pin definitions * * * * * * * * 
+ *                ___[USB-C]___    
+ *            5 )|             |( 5V
+ *            6 )|  ESP32-C3   |( GND                
+ *            7 )|  Supermini  |( 3V3
+ *            8 )|             |( 4
+ *            9 )|             |( 3
+ *           10 )|             |( 2
+ *           20 )|             |( 1
+ *           21 )| ___________ |( 0
+ */ 
+
 
 void uartPrintAlogHandle(const char* str){
     Serial.println(str);
