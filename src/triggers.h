@@ -4,6 +4,8 @@
 #include <map>
 #include <vector>
 
+#include "alfalog.h"
+
 class Trigger {
 	public:
 	Trigger(){};
@@ -111,18 +113,21 @@ class InputTrigger : public Trigger {
 	public:
 	int pin;
 	InputTrigger(std::vector<int> pins){
-		pins = pins;
+		this->pins = pins;
 	}
 
 	void init() {
 		for (auto i: pins) {
-			pinMode(i, INPUT);		
+			pinMode(i, INPUT_PULLUP);
 		}
+		//print list of initialized pins
+		ALOGI("{} input pins initialized: {}",pins.size(), fmt::join(pins, ", "));	
 	}
 
 	bool check() override {
+		// std::vector<bool> states;
 		for (int i = 0; i < pins.size(); i++) {
-			if (digitalRead(pins[i]) == LOW) {
+			if (digitalRead(pins[i]) == HIGH) {
 			  return false;
 			}
 		}

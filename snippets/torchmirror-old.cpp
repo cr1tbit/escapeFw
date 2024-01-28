@@ -11,25 +11,20 @@
 
 #include "alfalog.h"
 
-#include "threadedWS.h"
-
 /* * * Peripherals: * * */
 // 2x HAL sensor
 const std::vector<int> inputLight = {
-	1
+	PIN_INPUT_0
 };
 
 const std::vector<int> inputUV = {
-	2
+	PIN_INPUT_1
 };
-
-InputTrigger lightTrigger = InputTrigger(inputLight);
-InputTrigger UVTrigger = InputTrigger(inputUV);
 
 // 2x light GPIO
 const int pinLight = 4;
 const int pinUV = 5;
-
+ 
 /* * * * * * * * Pin definitions * * * * * * * * 
  *                ___[USB-C]___    
  *            5 )|             |( 5V
@@ -49,6 +44,20 @@ void uartPrintAlogHandle(const char* str){
 SerialLogger serialLogger = SerialLogger(
     uartPrintAlogHandle, LOG_DEBUG, ALOG_FANCY);
 
+CardReaderTrigger cardReaderTrigger = CardReaderTrigger(pins);
+// InputTrigger inputTrigger = InputTrigger(inputs);
+
+void connectWifi(){
+	WiFi.mode(WIFI_STA);
+    wifiMulti.addAP(WIFI_SSID, WIFI_PASS);
+    wifiMulti.run();
+    if(WiFi.status() != WL_CONNECTED){
+        WiFi.disconnect(true);
+        wifiMulti.run();
+    }
+	Serial.println("Wifi connect");
+}
+
 void setup() {
 	// Serial.setTxTimeoutMs(0); // prevent logger slowdown when no usb connected
 	Serial.begin(115200);
@@ -57,20 +66,34 @@ void setup() {
 
 	ALOGI("Starting setup");
 	// connectWifi();
-	lightTrigger.init();	
-	UVTrigger.init();
-
-	pinMode(pinLight, OUTPUT);
-	pinMode(pinUV, OUTPUT);
 	
+	cardReaderTrigger.init();
+	cardReaderTrigger.addCard(
+		{83, 91, 65, 221},
+		[](){
+			ALOGI("Card 0 detected");
+		}
+	);
+	cardReaderTrigger.addCard(
+		{4, 251, 3, 186, 184, 92, 132},
+		[](){
+			ALOGI("Card 0 detected");
+		}
+	);
 }
 
 void loop() {
-	
-	if (lightTrigger.check()) {
-		ALOGI("Light quest completed");
-		ledStrip.enabled = true;
-	}
-	
+	cardReaderTrigger.check();
+
+	// if (areAllInputsHigh(inputs)) {
+	// 	Serial.println("HAL quest completed");
+	// 	digitalWrite(PIN_LED_OUTPUT, HIGH);
+	// }
+
+	// if (isCardDetected()) {
+	// 	Serial.println("NFC quest completed");
+	// 	digitalWrite(PIN_LED_OUTPUT, HIGH);
+	// }
+
 	delay(100);
 }

@@ -14,13 +14,18 @@
 WiFiMulti wifiMulti;
 
 /* * * Peripherals: * * */
-// 1x HAL sensor
+// 1x HAL sensor, powered from GPIO
+
+const int HAL_PIN = 0;
+const int HAL_GND = 1;
+const int HAL_VDD = 2;
+
 const std::vector<int> inputs = {
-	PIN_INPUT_0
+	HAL_PIN
 };
 
 // 1x relay gpio switch
-const int PIN_RELAY = 4;
+const int PIN_RELAY = 10;
  
 /* * * * * * * * Pin definitions * * * * * * * * 
  *                ___[USB-C]___    
@@ -29,9 +34,9 @@ const int PIN_RELAY = 4;
  *            7 )|  Supermini  |( 3V3
  *            8 )|             |( 4
  *            9 )|             |( 3
- *           10 )|             |( 2
- *           20 )|             |( 1
- *           21 )| ___________ |( 0
+ *    RELAY  10 )|             |( 2   HAL_PIN
+ *           20 )|             |( 1   HAL_GND
+ *           21 )| ___________ |( 0   HAL_VDD
  */ 
 
 
@@ -42,19 +47,8 @@ void uartPrintAlogHandle(const char* str){
 SerialLogger serialLogger = SerialLogger(
     uartPrintAlogHandle, LOG_DEBUG, ALOG_FANCY);
 
-CardReaderTrigger cardReaderTrigger = CardReaderTrigger(pins);
-// InputTrigger inputTrigger = InputTrigger(inputs);
+InputTrigger inputTrigger = InputTrigger(inputs);
 
-void connectWifi(){
-	WiFi.mode(WIFI_STA);
-    wifiMulti.addAP(WIFI_SSID, WIFI_PASS);
-    wifiMulti.run();
-    if(WiFi.status() != WL_CONNECTED){
-        WiFi.disconnect(true);
-        wifiMulti.run();
-    }
-	Serial.println("Wifi connect");
-}
 
 void setup() {
 	// Serial.setTxTimeoutMs(0); // prevent logger slowdown when no usb connected
@@ -63,35 +57,22 @@ void setup() {
 	AlfaLogger.addBackend(&serialLogger);
 
 	ALOGI("Starting setup");
-	// connectWifi();
-	
-	cardReaderTrigger.init();
-	cardReaderTrigger.addCard(
-		{83, 91, 65, 221},
-		[](){
-			ALOGI("Card 0 detected");
-		}
-	);
-	cardReaderTrigger.addCard(
-		{4, 251, 3, 186, 184, 92, 132},
-		[](){
-			ALOGI("Card 0 detected");
-		}
-	);
+
+	pinMode(PIN_RELAY, OUTPUT);
+	digitalWrite(PIN_RELAY, LOW);
+
+	// HAL is powered from GPIO
+	pinMode(HAL_GND, OUTPUT);
+	digitalWrite(HAL_GND, LOW);
+	pinMode(HAL_VDD, OUTPUT);
+	digitalWrite(HAL_VDD, HIGH);
+
+	inputTrigger.init();
 }
 
-void loop() {
-	cardReaderTrigger.check();
-
-	// if (areAllInputsHigh(inputs)) {
-	// 	Serial.println("HAL quest completed");
-	// 	digitalWrite(PIN_LED_OUTPUT, HIGH);
-	// }
-
-	// if (isCardDetected()) {
-	// 	Serial.println("NFC quest completed");
-	// 	digitalWrite(PIN_LED_OUTPUT, HIGH);
-	// }
-
+void loop() {	
+	if (inputTrigger.check()) {
+		digitalWrite(PIN_RELAY, HIGH);
+	}
 	delay(100);
 }

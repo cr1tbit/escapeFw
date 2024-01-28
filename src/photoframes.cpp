@@ -10,19 +10,22 @@
 #include "secrets.h"
 
 #include "alfalog.h"
-#include <Adafruit_NeoPixel.h>
+
+#include "threadedWS.h"
 
 
 /* * * Peripherals: * * */
 // 6x HAL sensors
 const std::vector<int> inputs = {
-	PIN_INPUT_0, PIN_INPUT_1, PIN_INPUT_2,
-	PIN_INPUT_3, PIN_INPUT_4, PIN_INPUT_5,
+	5
 };
 
 // 1x WS2812 LED chain
-const int WS2812_PIN = 6;
+const int WS2812_PIN = 1;
 const int WS2812_LED_COUNT = 6;
+
+// 1x WS2812 LED chain
+ThreadedWS ledStrip = ThreadedWS(WS2812_PIN, 8);
 
 // 1x I2S sound card
 // const int PIN_CRDR_SS  = 3;
@@ -33,19 +36,18 @@ const int WS2812_LED_COUNT = 6;
 
  
 /* * * * * * * * Pin definitions * * * * * * * * 
- *                ___[USB-C]___    
- *            5 )|             |( 5V
- *            6 )|  ESP32-C3   |( GND                
- *            7 )|  Supermini  |( 3V3
- *            8 )|             |( 4
- *            9 )|             |( 3
- *           10 )|             |( 2
- *           20 )|             |( 1
- *           21 )| ___________ |( 0
+ *                    ___[USB-C]___    
+ *  PIN_INPUT_0   5 )|             |( 5V
+ *  PIN_INPUT_1   6 )|  ESP32-C3   |( GND                
+ *  PIN_INPUT_2   7 )|  Supermini  |( 3V3
+ *  PIN_INPUT_3   8 )|             |( 4     PIN_CRDR_RST
+ *  PIN_INPUT_4   9 )|             |( 3     PIN_CRDR_SS
+ *  PIN_INPUT_5  10 )|             |( 2     PIN_CRDR_SCLK
+ *  WS2812_PIN   20 )|             |( 1     PIN_CRDR_MOSI
+ *               21 )| ___________ |( 0     PIN_CRDR_MISO
  */ 
 
 // WiFiMulti wifiMulti;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
 
 
 void uartPrintAlogHandle(const char* str){
@@ -64,33 +66,27 @@ void setup() {
 	AlfaLogger.addBackend(&serialLogger);
 
 	ALOGI("Starting setup");
+	inputTrigger.init();
 
-	inputTrigger.init();	
+	ledStrip.init([](Adafruit_NeoPixel& strip) {
+		for (int i = 0; i<strip.numPixels(); i++){
+			strip.setPixelColor(i, 0, 0, random(30,60));
+			// strip.setPixelColor(i, 
+			// 	strip.ColorHSV(32768, 255, random(120)+135)
+			// );
+		}
+		return random(100);
+	});
 }
 
 bool framesSolved = false;
 
 void loop() {
-	if (framesSolved)
-	{
-		for (int i = 0; i < WS2812_LED_COUNT; i++)
-		{
-			int flicker = random(0, 95);
-			int r = random(200, 255 - flicker);
-			int g = random(100, 150 - flicker);
-			int b = 0;
-			strip.setPixelColor(i, strip.Color(r, g, b));
-		}
-		strip.show();
-		delay(random(100, 150));
+	
+	if (inputTrigger.check()) {
+		ALOGI("Light quest completed");
+		ledStrip.turnOn(5000);
 	}
-	else
-	{
-		if (inputTrigger.check())
-		{
-			Serial.println("Frames put in correct place!");
-			framesSolved = true;
-		}
-		delay(100);
-	}
+	
+	delay(300);
 }
