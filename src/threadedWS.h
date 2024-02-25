@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
 #include <Adafruit_NeoPixel.h>
-// #include <FreeRTOS.h>
 #include <functional>
 
 const uint8_t PROGMEM gamma8[] = {
@@ -22,18 +21,21 @@ const uint8_t PROGMEM gamma8[] = {
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
 
-
 class ThreadedWS {
   private:
     Adafruit_NeoPixel strip;
     std::function<int(Adafruit_NeoPixel&)> drawFunc;
     bool enabled = false;
 
+    float currentBriRatio = 0.0f;
+    float briRatioPerMs = 1.0f;
+
     int turnCommandTimestamp = 0;
     int turnCommandTransientMs = 0;
 
-    const int maxBrightness = 255;
   public:
+    int maxBrightness = 0;
+
     ThreadedWS(int pin, int ledCount) : strip(ledCount, pin, NEO_RGB + NEO_KHZ800) {}
 
     void init(std::function<int(Adafruit_NeoPixel&)> func) {
@@ -43,63 +45,55 @@ class ThreadedWS {
 
       // Create a new task that will execute the drawOnStrip() function
       xTaskCreatePinnedToCore(
-        drawOnStrip,   /* Function to implement the task */
-        "drawOnStrip", /* Name of the task */
-        2500,         /* Stack size in words */
-        this,          /* Task input parameter */
-        31,            /* Priority of the task */
-        NULL,          /* Task handle. */
-        1);            /* Core where the task should run */
+        drawOnStrip, "drawOnStrip",
+        2500, this, 31, NULL, 1 );
     }
 
     void turnOn(int transientMs) {
       if (enabled) {
         return;
       }
-      turnCommandTransientMs = transientMs;
-      turnCommandTimestamp = millis();
+      briRatioPerMs = 1.0f / (float)transientMs;
       enabled = true;
+      ALOGI("briRatioPerMs: {}", briRatioPerMs);
     }
 
     void turnOff(int transientMs) {
       if (!enabled) {
         return;
       }
-      turnCommandTransientMs = transientMs;
-      turnCommandTimestamp = millis();
+      briRatioPerMs = 1.0f / (float)transientMs;
       enabled = false;
+      ALOGI("briRatioPerMs: {}", briRatioPerMs);
+    }
+
+    float getUpdatedBriRatio(int delayMs) {
+      float briDelta = briRatioPerMs * (float)delayMs;
+      if (enabled) {
+        currentBriRatio += briDelta;
+      } else {
+        currentBriRatio -= briDelta;
+      }
+      if (currentBriRatio > 1.0f){
+        currentBriRatio = 1.0f;
+      }
+      if (currentBriRatio < 0.0f){
+        currentBriRatio = 0.0f;
+      }
+      ALOGI("briDelta: {} {}", briDelta, currentBriRatio);
+      return currentBriRatio;
     }
 
     static void drawOnStrip(void * parameter) {
       ThreadedWS* stripObj = static_cast<ThreadedWS*>(parameter);
       for(;;) { // Infinite loop
-        int targetDelay = stripObj->drawFunc(stripObj->strip);
+        int targetDelay = stripObj->drawFunc(stripObj->strip);       
+        float dimmRatio = stripObj->getUpdatedBriRatio(targetDelay);
 
-        //handle transient dimming
-        float dimmRatio = 1.0f;
-        if ((stripObj->turnCommandTransientMs + stripObj->turnCommandTimestamp) > millis()) {
-          dimmRatio = (float)(millis() - stripObj->turnCommandTimestamp)
-            / ((float)(stripObj->turnCommandTransientMs));
-          ALOGI("penis {}/{} = {}",            
-            millis() - stripObj->turnCommandTimestamp,
-            stripObj->turnCommandTransientMs,
-            dimmRatio
-          );
-          
-        }
+        uint8_t briGammaCorr = gamma8[(uint8_t)(stripObj->maxBrightness * dimmRatio)];
 
-        uint8_t briGammaCorr;
-
-        if (stripObj->enabled) {
-          briGammaCorr = gamma8[(uint8_t)(stripObj->maxBrightness * dimmRatio)];
-          // stripObj->strip.setBrightness(stripObj->maxBrightness * dimmRatio);
-        } else {
-          briGammaCorr = gamma8[(uint8_t)(stripObj->maxBrightness * (1.0f - dimmRatio))];
-          // stripObj->strip.setBrightness(stripObj->maxBrightness * (1.0f - dimmRatio));
-        }        
         stripObj->strip.setBrightness(briGammaCorr);
-        ALOGI("dupa {} {}",dimmRatio, briGammaCorr);
-
+        ALOGI("SetBri {} {}",dimmRatio, briGammaCorr);
 
 		    stripObj->strip.show();
         if (targetDelay < 10 ){

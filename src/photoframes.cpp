@@ -15,9 +15,14 @@
 
 
 /* * * Peripherals: * * */
+
+// Contractron pin
+const int CONT_PIN = 5;
+const int TURN_ON_DELAY = 1000;
+
 // 6x HAL sensors
 const std::vector<int> inputs = {
-	5
+	6
 };
 
 // 1x WS2812 LED chain
@@ -67,6 +72,8 @@ void setup() {
 
 	ALOGI("Starting setup");
 	inputTrigger.init();
+	ledStrip.maxBrightness = 255;
+
 
 	ledStrip.init([](Adafruit_NeoPixel& strip) {
 		for (int i = 0; i<strip.numPixels(); i++){
@@ -85,7 +92,12 @@ void loop() {
 	
 	if (inputTrigger.check()) {
 		ALOGI("Light quest completed");
-		ledStrip.turnOn(5000);
+		ledStrip.maxBrightness = 255;
+	}
+	if (digitalRead(CONT_PIN) == LOW) {
+		ledStrip.turnOn(TURN_ON_DELAY);
+	} else {
+		ledStrip.turnOff(TURN_ON_DELAY);
 	}
 	
 	delay(300);
