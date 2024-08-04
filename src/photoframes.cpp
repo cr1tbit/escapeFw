@@ -25,6 +25,8 @@ const std::vector<int> inputs = {
 	5,6,7,8
 };
 
+const int PHOTOFRAMES_CPLT_PIN = 9;
+
 // 1x WS2812 LED chain
 const int WS2812_PIN = 10;
 const int WS2812_LED_COUNT = 6;
@@ -74,6 +76,8 @@ void setup() {
 	inputTrigger.init();
 	ledStrip.maxBrightness = 0;
 
+	pinMode(PHOTOFRAMES_CPLT_PIN, OUTPUT);
+	digitalWrite(PHOTOFRAMES_CPLT_PIN, LOW);
 
 	ledStrip.init([](Adafruit_NeoPixel& strip) {
 		for (int i = 0; i<strip.numPixels(); i++){
@@ -93,8 +97,13 @@ bool framesSolved = false;
 void loop() {
 	
 	if (inputTrigger.check()) {
-		ALOGI("Light quest completed");
-		ledStrip.maxBrightness = 255;
+		if (framesSolved == false ) {
+			framesSolved = true;
+			ALOGI("Light quest completed");
+			ledStrip.maxBrightness = 255;
+			ledStrip.turnOn(TURN_ON_DELAY);
+			digitalWrite(PHOTOFRAMES_CPLT_PIN, LOW);
+		}
 	}
 	// if (digitalRead(CONT_PIN) == LOW) {
 	// 	ledStrip.turnOn(TURN_ON_DELAY);
