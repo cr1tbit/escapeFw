@@ -16,9 +16,9 @@ WiFiMulti wifiMulti;
 /* * * Peripherals: * * */
 // 1x HAL sensor, powered from GPIO
 
-const int HAL_PIN = 0;
+const int HAL_PIN = 2;
 const int HAL_GND = 1;
-const int HAL_VDD = 2;
+const int HAL_VDD = 0;
 
 const std::vector<int> inputs = {
 	HAL_PIN

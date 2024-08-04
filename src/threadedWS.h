@@ -80,7 +80,7 @@ class ThreadedWS {
       if (currentBriRatio < 0.0f){
         currentBriRatio = 0.0f;
       }
-      ALOGI("briDelta: {} {}", briDelta, currentBriRatio);
+      ALOGT("briDelta: {} {}", briDelta, currentBriRatio);
       return currentBriRatio;
     }
 
@@ -93,7 +93,7 @@ class ThreadedWS {
         uint8_t briGammaCorr = gamma8[(uint8_t)(stripObj->maxBrightness * dimmRatio)];
 
         stripObj->strip.setBrightness(briGammaCorr);
-        ALOGI("SetBri {} {}",dimmRatio, briGammaCorr);
+        ALOGT("SetBri {} {}",dimmRatio, briGammaCorr);
 
 		    stripObj->strip.show();
         if (targetDelay < 10 ){
