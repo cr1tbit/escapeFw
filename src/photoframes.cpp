@@ -25,7 +25,7 @@ const std::vector<int> inputs = {
 	5,6,7,8
 };
 
-const int PHOTOFRAMES_CPLT_PIN = 9;
+const int PHOTOFRAMES_CPLT_PIN = 2;
 
 // 1x WS2812 LED chain
 const int WS2812_PIN = 10;
@@ -47,11 +47,11 @@ ThreadedWS ledStrip = ThreadedWS(WS2812_PIN, 8);
  *  PIN_INPUT_0   5 )|             |( 5V
  *  PIN_INPUT_1   6 )|  ESP32-C3   |( GND                
  *  PIN_INPUT_2   7 )|  Supermini  |( 3V3
- *  PIN_INPUT_3   8 )|             |( 4     PIN_CRDR_RST
- *  PIN_INPUT_4   9 )|             |( 3     PIN_CRDR_SS
- *  PIN_INPUT_5  10 )|             |( 2     PIN_CRDR_SCLK
- *  WS2812_PIN   20 )|             |( 1     PIN_CRDR_MOSI
- *               21 )| ___________ |( 0     PIN_CRDR_MISO
+ *  PIN_INPUT_3   8 )|             |( 4     
+ *                9 )|             |( 3     CLPT_ALT
+ *  WS2812_PIN   10 )|             |( 2     CPLT
+ *               20 )|             |( 1     
+ *               21 )| ___________ |( 0
  */ 
 
 // WiFiMulti wifiMulti;
@@ -102,7 +102,7 @@ void loop() {
 			ALOGI("Light quest completed");
 			ledStrip.maxBrightness = 255;
 			ledStrip.turnOn(TURN_ON_DELAY);
-			digitalWrite(PHOTOFRAMES_CPLT_PIN, LOW);
+			digitalWrite(PHOTOFRAMES_CPLT_PIN, HIGH);
 		}
 	}
 	// if (digitalRead(CONT_PIN) == LOW) {

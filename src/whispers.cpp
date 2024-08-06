@@ -86,37 +86,22 @@ void setup()
     I2S_SPEAKER_SERIAL_DATA
   );
   
-  out->SetGain(0.5); //set volume
+  out->SetGain(0.0); //set volume
 
   mp3 = new AudioGeneratorMP3();
   mp3->begin(id3, out);
 }
 
 bool photoFramesComplete = false;
-// void loop()
-// {
-// //   if (digitalRead(PHOTOFRAMES_CPLT_PIN) == HIGH) {
-// //   if (digitalRead(DOOR_CLOSED_PIN) == HIGH) {
-// //     if (!photoFramesComplete) {
-// //       photoFramesComplete = true;
-// //     }
-// //   }
-  
-//   if (mp3->isRunning()) {
-//     if (!mp3->loop()) {
-//       // delay(1000);
-//       ESP.restart();
-//     }
-//   }
-// }
-
 
 void loop()
 {
-//   if (digitalRead(PHOTOFRAMES_CPLT_PIN) == HIGH) {
-  if (digitalRead(DOOR_CLOSED_PIN) == LOW) {
+  if (digitalRead(PHOTOFRAMES_CPLT_PIN) == HIGH) {
+  // if (digitalRead(DOOR_CLOSED_PIN) == LOW) {
     if (!photoFramesComplete) {
       photoFramesComplete = true;
+      Serial.println("Photo frames completed");
+      out->SetGain(0.5);
     }
   }
   
@@ -125,7 +110,8 @@ void loop()
     if (digitalRead(DOOR_CLOSED_PIN) == LOW) {
         if (!mp3->loop()) {
             // delay(1000);
-              mp3->begin(id3, out);
+              // mp3->begin(id3, out);
+             ESP.restart();
 
         }
     }
