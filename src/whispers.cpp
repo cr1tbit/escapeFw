@@ -15,9 +15,11 @@ const int I2S_SPEAKER_SERIAL_CLOCK = 2; // BCLK
 const int I2S_SPEAKER_LEFT_RIGHT_CLOCK = 1; // WSEL,LRC 
 const int I2S_SPEAKER_SERIAL_DATA = 3; // DIN
 
-const int PHOTOFRAMES_CPLT_PIN = 5; // or 8
+// const int PHOTOFRAMES_CPLT_PIN = 5; // or 8
+const int PHOTOFRAMES_CPLT_PIN = 8; // or 8
 const int DOOR_CLOSED_PIN = 6;
 
+const int pinOnboardLed = 8;
 
 /* * * * * * * * Pin definitions * * * * * * * * 
  *                ___[USB-C]___                     MAX98357A
@@ -40,34 +42,17 @@ AudioFileSourceSPIFFS *file;
 AudioOutputI2S *out;
 AudioFileSourceID3 *id3;
 
-// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
-void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
-{
-  (void)cbData;
-  Serial.printf("ID3 callback for: %s = '", type);
-
-  if (isUnicode) {
-    string += 2;
-  }
-  
-  while (*string) {
-    char a = *(string++);
-    if (isUnicode) {
-      string++;
-    }
-    Serial.printf("%c", a);
-  }
-  Serial.printf("'\n");
-  Serial.flush();
-}
 
 void setup()
 {
   Serial.begin(115200);
-  Serial.setTxTimeoutMs(0);
+  // Serial.setTxTimeoutMs(0);
+
+  // pinMode(pinOnboardLed, OUTPUT);
+	// digitalWrite(pinOnboardLed, HIGH);
 
   pinMode(PHOTOFRAMES_CPLT_PIN, INPUT_PULLDOWN);
-  pinMode(DOOR_CLOSED_PIN, INPUT_PULLDOWN);
+  pinMode(DOOR_CLOSED_PIN, INPUT_PULLUP);
 
   SPIFFS.begin();
 
@@ -77,7 +62,7 @@ void setup()
   file = new AudioFileSourceSPIFFS("/spooky.mp3");
 
   id3 = new AudioFileSourceID3(file);
-  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+  // id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
 
   out = new AudioOutputI2S();
   out -> SetPinout(
@@ -94,16 +79,24 @@ void setup()
 
 bool photoFramesComplete = false;
 
+int lastTickMs = 0;
+int blinkSpeed = 600;
+
 void loop()
 {
   if (digitalRead(PHOTOFRAMES_CPLT_PIN) == HIGH) {
-  // if (digitalRead(DOOR_CLOSED_PIN) == LOW) {
     if (!photoFramesComplete) {
       photoFramesComplete = true;
+      blinkSpeed = 300;
       Serial.println("Photo frames completed");
       out->SetGain(0.5);
     }
   }
+
+  // if (millis() - lastTickMs > blinkSpeed) {
+  //   lastTickMs = millis();
+  //   digitalWrite(pinOnboardLed, !digitalRead(pinOnboardLed));
+  // }
   
   
   if (mp3->isRunning()) {
@@ -118,3 +111,27 @@ void loop()
     
   }
 }
+
+
+
+
+// // Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
+// void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
+// {
+//   (void)cbData;
+//   Serial.printf("ID3 callback for: %s = '", type);
+
+//   if (isUnicode) {
+//     string += 2;
+//   }
+  
+//   while (*string) {
+//     char a = *(string++);
+//     if (isUnicode) {
+//       string++;
+//     }
+//     Serial.printf("%c", a);
+//   }
+//   Serial.printf("'\n");
+//   Serial.flush();
+// }

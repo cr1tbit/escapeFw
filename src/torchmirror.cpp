@@ -27,17 +27,19 @@ InputTrigger lightTrigger = InputTrigger(inputLight);
 InputTrigger UVTrigger = InputTrigger(inputUV);
 
 // 2x light GPIO
-const int pinLight = 4;
-const int pinUV = 5;
+const int pinLight = 10;
+const int pinUV = 9;
+
+const int pinOnboardLed = 8;
 
 /* * * * * * * * Pin definitions * * * * * * * * 
  *                ___[USB-C]___    
  *            5 )|             |( 5V
  *            6 )|  ESP32-C3   |( GND                
- *            7 )|  Supermini  |( 3V3
- *            8 )|             |( 4    pinUV
- *            9 )|             |( 3    pinLight
- *           10 )|             |( 2    inputUV
+ *            7 )|  Supermini  |( 3V3  LED/HAL pwr
+ *            8 )| <-led       |( 4    (legacy) pinUV
+ *  pinUv     9 )|             |( 3    (legacy) pinLight
+ *  pinLight 10 )|             |( 2    inputUV
  *           20 )|             |( 1    inputLight
  *           21 )| ___________ |( 0    
  */ 
@@ -55,6 +57,12 @@ void setup() {
 
 	AlfaLogger.addBackend(&serialLogger);
 
+	pinMode(pinOnboardLed, OUTPUT);
+	digitalWrite(pinOnboardLed, HIGH);
+
+	pinMode(pinLight, OUTPUT);
+	digitalWrite(pinLight, HIGH);
+
 	ALOGI("Starting setup");
 	// connectWifi();
 	lightTrigger.init();	
@@ -62,15 +70,25 @@ void setup() {
 
 	pinMode(pinLight, OUTPUT);
 	pinMode(pinUV, OUTPUT);
-	
 }
 
+int loopCounter = 0;
+bool completed = false;
 void loop() {
 	
-	if (lightTrigger.check()) {
+	if (lightTrigger.check() && !completed) {
 		ALOGI("Light quest completed");
-		ledStrip.enabled = true;
+		completed = true;
+		// ledStrip.enabled = true;
+		digitalWrite(pinLight, LOW);
 	}
 	
+	
+	//toggle LED every 1sec
+	if (loopCounter % 10 == 0) {
+		digitalWrite(pinOnboardLed, !digitalRead(pinOnboardLed));
+	}
+	loopCounter++;
+
 	delay(100);
 }

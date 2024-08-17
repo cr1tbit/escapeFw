@@ -94,6 +94,11 @@ void setup() {
 
 bool framesSolved = false;
 
+// int lastTickMs = 0;
+// int blinkSpeed = 600;
+
+int counter = 0;
+
 void loop() {
 	
 	if (inputTrigger.check()) {
@@ -103,13 +108,13 @@ void loop() {
 			ledStrip.maxBrightness = 255;
 			ledStrip.turnOn(TURN_ON_DELAY);
 			digitalWrite(PHOTOFRAMES_CPLT_PIN, HIGH);
-		}
+		} 
+	} else {
+		printf("%4d check: | ", counter++);
+		for (int i = 0; i < inputs.size(); i++) {
+			printf("%d | ", digitalRead(inputs[i]));		
+		}	
+		printf("\n\r");
 	}
-	// if (digitalRead(CONT_PIN) == LOW) {
-	// 	ledStrip.turnOn(TURN_ON_DELAY);
-	// } else {
-	// 	ledStrip.turnOff(TURN_ON_DELAY);
-	// }
-	
 	delay(300);
 }
