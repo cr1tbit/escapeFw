@@ -1,6 +1,4 @@
-
 #include <Arduino.h>
-
 
 #include <WiFi.h>
 #include "SPIFFS.h"
@@ -10,7 +8,6 @@
 #include "AudioOutputI2S.h"
 #include "AudioFileSourceID3.h"
 
-
 const int I2S_SPEAKER_SERIAL_CLOCK = 2; // BCLK
 const int I2S_SPEAKER_LEFT_RIGHT_CLOCK = 1; // WSEL,LRC 
 const int I2S_SPEAKER_SERIAL_DATA = 3; // DIN
@@ -19,7 +16,7 @@ const int I2S_SPEAKER_SERIAL_DATA = 3; // DIN
 const int PHOTOFRAMES_CPLT_PIN = 8; // or 8
 const int DOOR_CLOSED_PIN = 6;
 
-const int pinOnboardLed = 8;
+// const int pinOnboardLed = 8; //conflict
 
 /* * * * * * * * Pin definitions * * * * * * * * 
  *                ___[USB-C]___                     MAX98357A
@@ -41,7 +38,6 @@ AudioGeneratorMP3 *mp3;
 AudioFileSourceSPIFFS *file;
 AudioOutputI2S *out;
 AudioFileSourceID3 *id3;
-
 
 void setup()
 {
@@ -97,8 +93,7 @@ void loop()
   //   lastTickMs = millis();
   //   digitalWrite(pinOnboardLed, !digitalRead(pinOnboardLed));
   // }
-  
-  
+    
   if (mp3->isRunning()) {
     if (digitalRead(DOOR_CLOSED_PIN) == LOW) {
         if (!mp3->loop()) {
@@ -111,9 +106,6 @@ void loop()
     
   }
 }
-
-
-
 
 // // Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
 // void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
